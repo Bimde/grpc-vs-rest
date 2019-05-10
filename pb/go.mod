@@ -1,4 +1,4 @@
-module pb
+module github.com/Bimde/grpc-vs-rest/pb
 
 go 1.12
 
