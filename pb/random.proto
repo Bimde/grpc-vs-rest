@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package pb;
+
+message Random {
+  string randomString = 1;
+  int32 randomInt = 2;
+}
+
+service RandomService {
+  rpc DoSomething (Random) returns (Random) {}
+}
