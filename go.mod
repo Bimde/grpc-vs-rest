@@ -3,6 +3,7 @@ module github.com/Bimde/grpc-vs-rest
 go 1.12
 
 require (
+	github.com/Bimde/grpc-vs-rest/pb v0.0.0-20190510020245-d0b8e3a579ad
 	github.com/golang/protobuf v1.3.1
 	github.com/rogpeppe/godef v1.1.1 // indirect
 	golang.org/x/crypto v0.0.0-20190506204251-e1dfcc566284 // indirect
