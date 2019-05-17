@@ -3,15 +3,18 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"testing"
+
 	//"testing"
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"io/ioutil"
-	"encoding/json"
-    "sync"
+	"sync"
 
 	//"golang.org/x/net/http2"
 	"github.com/Bimde/grpc-vs-rest/pb"
+	"golang.org/x/net/http2"
 )
 
 var client http.Client
@@ -54,64 +57,64 @@ func createTLSConfigWithCustomCert() *tls.Config {
 // }
 
 func get(path string, output interface{}) error {
-    req, err := http.NewRequest("GET", path, nil)
-    if err != nil {
-        log.Println("error creating request ", err)
-        return err
-	}
-	
-    res, err := client.Do(req)
-    if err != nil {
-        log.Println("error executing request ", err)
-        return err
-    }
-
-    bytes, err := ioutil.ReadAll(res.Body)
-    if err != nil {
-        log.Println("error reading response body ", err)
-        return err
-    }
-
-    err = json.Unmarshal(bytes, output)
-    if err != nil {
-        log.Println("error unmarshalling response ", err)
-        return err
+	req, err := http.NewRequest("GET", path, nil)
+	if err != nil {
+		log.Println("error creating request ", err)
+		return err
 	}
 
-    return nil
+	res, err := client.Do(req)
+	if err != nil {
+		log.Println("error executing request ", err)
+		return err
+	}
+
+	bytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Println("error reading response body ", err)
+		return err
+	}
+
+	err = json.Unmarshal(bytes, output)
+	if err != nil {
+		log.Println("error unmarshalling response ", err)
+		return err
+	}
+
+	return nil
 }
 
 type Request struct {
-	Path string
+	Path   string
 	Random *pb.Random
 }
 
 const stopRequestPath = "STOP"
 const noWorkers = 4096
 
-// func BenchmarkHTTP2GetWithWokers(b *testing.B) {
-// 	client.Transport = &http2.Transport{
-// 		TLSClientConfig: createTLSConfigWithCustomCert(),
-// 	}
-// 	requestQueue := make(chan Request)
-// 	defer startWorkers(&requestQueue, noWorkers, startWorker)()
-// 	b.ResetTimer() // don't count worker initialization time
-// 	for i := 0; i < b.N; i++ {
-// 		requestQueue <- Request{Path: "https://bimde:8080", Random: &pb.Random{}}
-// 	}
-// }
+func BenchmarkHTTP2GetWithWokers(b *testing.B) {
+	client.Transport = &http2.Transport{
+		TLSClientConfig: createTLSConfigWithCustomCert(),
+	}
+	requestQueue := make(chan Request)
+	defer startWorkers(&requestQueue, noWorkers, startWorker)()
+	b.ResetTimer() // don't count worker initialization time
+	for i := 0; i < b.N; i++ {
+		requestQueue <- Request{Path: "https://bimde:8080", Random: &pb.Random{}}
+	}
+}
 
-// func BenchmarkHTTP11Get(b *testing.B) {
-// 	client.Transport = &http.Transport{
-// 		TLSClientConfig: createTLSConfigWithCustomCert(),
-// 	}
-// 	requestQueue := make(chan Request)
-// 	defer startWorkers(&requestQueue, noWorkers, startWorker)()
-// 	b.ResetTimer() // don't count worker initialization time
-// 	for i := 0; i < b.N; i++ {
-// 		requestQueue <- Request{Path: "https://bimde:8080", Random: &pb.Random{}}
-// 	}
-// }
+func BenchmarkHTTP11Get(b *testing.B) {
+	client.Transport = &http.Transport{
+		TLSClientConfig: createTLSConfigWithCustomCert(),
+	}
+	requestQueue := make(chan Request)
+	defer startWorkers(&requestQueue, noWorkers, startWorker)()
+	b.ResetTimer() // don't count worker initialization time
+	for i := 0; i < b.N; i++ {
+		requestQueue <- Request{Path: "https://bimde:8080", Random: &pb.Random{}}
+	}
+}
 
 func startWorkers(requestQueue *chan Request, noWorkers int, startWorker func(*chan Request, *sync.WaitGroup)) func() {
 	var wg sync.WaitGroup
@@ -131,8 +134,8 @@ func startWorkers(requestQueue *chan Request, noWorkers int, startWorker func(*c
 func startWorker(requestQueue *chan Request, wg *sync.WaitGroup) {
 	go func() {
 		for {
-			request := <- *requestQueue
-			if (request.Path == stopRequestPath) {
+			request := <-*requestQueue
+			if request.Path == stopRequestPath {
 				wg.Done()
 				return
 			}

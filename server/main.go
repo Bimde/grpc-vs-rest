@@ -1,9 +1,10 @@
 package main
 
 import (
-	"log"
 	"encoding/json"
+	"log"
 	"net/http"
+
 	"github.com/Bimde/grpc-vs-rest/pb"
 )
 

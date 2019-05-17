@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	
+
 	"github.com/Bimde/grpc-vs-rest/pb"
 )
 
@@ -26,6 +26,6 @@ func main() {
 }
 
 func (s *server) DoSomething(_ context.Context, random *pb.Random) (*pb.Random, error) {
-	random.RandomString = "[Updated] " + random.RandomString;
+	random.RandomString = "[Updated] " + random.RandomString
 	return random, nil
 }
